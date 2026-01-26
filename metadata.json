@@ -1,0 +1,5 @@
+{
+  "name": "XisaabiyePro: Smart Financial Auditor",
+  "description": "A sophisticated tool that cross-references User Registries, Daily Earnings, and Bank Statements using Gemini 3 Pro to identify payment discrepancies and account-specific breakdowns.",
+  "requestFramePermissions": []
+}
