@@ -66,7 +66,8 @@ export const exportResultsToPDF = (results: AuditResults) => {
   }
   
   // Footer
-  const pageCount = doc.internal.getNumberOfPages();
+  // Use getNumberOfPages via internal or direct method depending on version
+  const pageCount = (doc as any).internal.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFontSize(8);
