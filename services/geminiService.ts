@@ -6,7 +6,13 @@ export const performAudit = async (
   earningsBase64: string,
   statementBase64: string
 ): Promise<AuditResults> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const apiKey = process.env.API_KEY;
+  
+  if (!apiKey || apiKey === 'undefined' || apiKey === '') {
+    throw new Error("API_KEY environment variable is missing. Please set it in your Vercel project settings and redeploy your app.");
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
 
   const prompt = `
     You are XisaabiyePro, an elite Forensic Financial Auditor. 
