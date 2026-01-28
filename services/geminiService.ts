@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { AuditResults } from "../types";
 
@@ -7,8 +6,7 @@ export const performAudit = async (
   earningsBase64: string,
   statementBase64: string
 ): Promise<AuditResults> => {
-  // Using gemini-3-pro-preview for high-precision forensic auditing with reasoning
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const prompt = `
     You are XisaabiyePro, an elite Forensic Financial Auditor. 
