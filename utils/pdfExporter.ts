@@ -1,3 +1,4 @@
+
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { AuditResults } from '../types';
@@ -80,17 +81,23 @@ export const exportResultsToPDF = (results: AuditResults) => {
         `$${u.totalSent.toFixed(2)}`,
         { 
           content: `$${u.balance.toFixed(2)}`, 
-          styles: { textColor: u.balance < 0 ? [220, 38, 38] : [22, 163, 74], fontStyle: 'bold' } 
+          // Cast color and fontStyle to literal types to satisfy jspdf-autotable CellDef interface
+          styles: { textColor: (u.balance < 0 ? [220, 38, 38] : [22, 163, 74]) as [number, number, number], fontStyle: 'bold' as const } 
         }
       ]),
       // Footer Row
       [
-        { content: 'TOTALS', colSpan: 2, styles: { fillColor: [241, 245, 249], fontStyle: 'bold', halign: 'right' } },
-        { content: `$${grandTotalOwed.toFixed(2)}`, styles: { fillColor: [241, 245, 249], fontStyle: 'bold' } },
-        { content: `$${grandTotalSent.toFixed(2)}`, styles: { fillColor: [241, 245, 249], fontStyle: 'bold' } },
+        // Ensure all style properties use literal type casting for strict TypeScript environments
+        { content: 'TOTALS', colSpan: 2, styles: { fillColor: [241, 245, 249] as [number, number, number], fontStyle: 'bold' as const, halign: 'right' as const } },
+        { content: `$${grandTotalOwed.toFixed(2)}`, styles: { fillColor: [241, 245, 249] as [number, number, number], fontStyle: 'bold' as const } },
+        { content: `$${grandTotalSent.toFixed(2)}`, styles: { fillColor: [241, 245, 249] as [number, number, number], fontStyle: 'bold' as const } },
         { 
           content: `$${totalBalance.toFixed(2)}`, 
-          styles: { fillColor: [241, 245, 249], fontStyle: 'bold', textColor: totalBalance < 0 ? [220, 38, 38] : [22, 163, 74] } 
+          styles: { 
+            fillColor: [241, 245, 249] as [number, number, number], 
+            fontStyle: 'bold' as const, 
+            textColor: (totalBalance < 0 ? [220, 38, 38] : [22, 163, 74]) as [number, number, number] 
+          } 
         }
       ]
     ],

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { AuditResults } from '../types';
 
@@ -8,8 +7,31 @@ interface ResultsViewProps {
 }
 
 const ResultsView: React.FC<ResultsViewProps> = ({ results, onDownload }) => {
+  // Grand Totals Calculation
+  const grandTotalOwed = results.userSummaries.reduce((sum, u) => sum + u.totalOwed, 0);
+  const grandTotalSent = results.userSummaries.reduce((sum, u) => sum + u.totalSent, 0);
+  const netBalance = grandTotalSent - grandTotalOwed;
+
   return (
     <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500">
+      {/* Financial Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Owed (Earnings)</p>
+          <p className="text-3xl font-black text-slate-900">${grandTotalOwed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+        </div>
+        <div className="bg-white p-6 rounded-2xl border border-blue-100 shadow-sm shadow-blue-50">
+          <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">Total Sent (Statement)</p>
+          <p className="text-3xl font-black text-blue-600">${grandTotalSent.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+        </div>
+        <div className={`p-6 rounded-2xl border shadow-sm ${netBalance < 0 ? 'bg-red-50 border-red-100' : 'bg-green-50 border-green-100'}`}>
+          <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${netBalance < 0 ? 'text-red-400' : 'text-green-500'}`}>Net Collection Balance</p>
+          <p className={`text-3xl font-black ${netBalance < 0 ? 'text-red-600' : 'text-green-700'}`}>
+            {netBalance < 0 ? '-' : '+'}${Math.abs(netBalance).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+          </p>
+        </div>
+      </div>
+
       {/* Official Audit Memo Section */}
       <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden">
         <div className="bg-slate-900 px-8 py-6 flex flex-col md:flex-row justify-between items-center gap-6">
@@ -21,7 +43,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({ results, onDownload }) => {
             </div>
             <div>
               <h2 className="text-xl font-black text-white tracking-tight uppercase">XisaabiyePro <span className="text-blue-400">Analysis</span></h2>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em]">Quick Discrepancy List</p>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em]">Official Audit Findings</p>
             </div>
           </div>
           <button 
@@ -31,14 +53,14 @@ const ResultsView: React.FC<ResultsViewProps> = ({ results, onDownload }) => {
             <svg className="w-5 h-5 group-hover:bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
-            EXPORT PDF
+            EXPORT SUMMARY PDF
           </button>
         </div>
         
         <div className="relative p-8 bg-slate-50">
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Discrepancy Summary</span>
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Executive Summary</span>
               <div className="h-px flex-grow bg-slate-200"></div>
             </div>
             
@@ -54,7 +76,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({ results, onDownload }) => {
       {/* Main Reconciliation Table */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-          <h3 className="font-black text-slate-900 uppercase text-[11px] tracking-[0.2em]">Active Earnings Reconciliation</h3>
+          <h3 className="font-black text-slate-900 uppercase text-[11px] tracking-[0.2em]">Detailed Reconciliation Table</h3>
           <span className="text-[10px] font-bold text-slate-400 bg-white px-2 py-1 rounded border border-slate-100">
             {results.userSummaries.length} Users Found
           </span>
