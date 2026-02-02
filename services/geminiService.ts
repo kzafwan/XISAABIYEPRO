@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { AuditResults } from "../types";
 
@@ -34,7 +33,7 @@ export const performAudit = async (
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview',
+      model: 'gemini-3-flash-preview',
       contents: [
         {
           parts: [
@@ -46,7 +45,6 @@ export const performAudit = async (
         }
       ],
       config: {
-        thinkingConfig: { thinkingBudget: 15000 },
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -103,6 +101,9 @@ export const performAudit = async (
 
     return JSON.parse(response.text || "{}") as AuditResults;
   } catch (error: any) {
+    if (error.message?.includes('429')) {
+      throw new Error("Quota Exceeded: The system is currently overloaded or you have reached your free tier limit. Please wait 60 seconds and try again.");
+    }
     throw new Error(`Audit Failed: ${error.message}`);
   }
 };

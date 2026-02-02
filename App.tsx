@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import FileUploadCard from './components/FileUploadCard';
 import ResultsView from './components/ResultsView';
@@ -158,7 +157,7 @@ const App: React.FC = () => {
             )}
 
             {error && (
-              <div className="mt-4 p-6 bg-white border-2 border-red-100 rounded-2xl max-w-lg shadow-lg">
+              <div className="mt-4 p-6 bg-white border-2 border-red-100 rounded-2xl max-w-lg shadow-lg animate-in fade-in slide-in-from-top-2">
                 <div className="flex items-start gap-4">
                   <div className="bg-red-100 p-2 rounded-full">
                     <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -167,7 +166,12 @@ const App: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="font-bold text-red-900">Audit Interrupted</h3>
-                    <p className="text-sm text-red-700 mt-1 font-medium">{error}</p>
+                    <p className="text-sm text-red-700 mt-1 font-medium leading-relaxed">{error}</p>
+                    {error.includes("Quota") && (
+                      <div className="mt-3 text-xs text-red-500 italic">
+                        Note: The Flash model (now enabled) usually has much higher limits. Try again in a moment.
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
