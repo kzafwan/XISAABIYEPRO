@@ -1,19 +1,10 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import FileUploadCard from './components/FileUploadCard';
 import ResultsView from './components/ResultsView';
 import { performAudit } from './services/geminiService';
 import { exportResultsToPDF } from './utils/pdfExporter';
 import { AuditResults, FileState, FileType } from './types';
-
-const LOADING_STEPS = [
-  "Initializing forensic audit engine...",
-  "Scanning User Registry for master IDs...",
-  "Processing Daily Earnings for debt mapping...",
-  "Ingesting Bank Statement for credit verification...",
-  "Correlating transactions using cross-reference logic...",
-  "Validating final balances and detecting anomalies...",
-  "Compiling professional audit report..."
-];
 
 const App: React.FC = () => {
   const [registry, setRegistry] = useState<FileState>({ file: null, base64: null, status: 'empty' });
@@ -21,22 +12,8 @@ const App: React.FC = () => {
   const [statement, setStatement] = useState<FileState>({ file: null, base64: null, status: 'empty' });
   
   const [loading, setLoading] = useState(false);
-  const [loadingStep, setLoadingStep] = useState(0);
   const [results, setResults] = useState<AuditResults | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  // Thought-stream effect
-  useEffect(() => {
-    let interval: any;
-    if (loading) {
-      interval = setInterval(() => {
-        setLoadingStep(prev => (prev < LOADING_STEPS.length - 1 ? prev + 1 : prev));
-      }, 3500);
-    } else {
-      setLoadingStep(0);
-    }
-    return () => clearInterval(interval);
-  }, [loading]);
 
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -119,7 +96,7 @@ const App: React.FC = () => {
 
       <main className="max-w-7xl mx-auto px-6 pt-12">
         <header className="mb-12 text-center">
-          <h1 className="text-5xl font-black text-slate-900 mb-4 tracking-tighter">FINANCIAL AUDIT</h1>
+          <h1 className="text-5xl font-black text-slate-900 mb-4 tracking-tighter uppercase">Financial Audit</h1>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto font-medium">
             Cross-audit your records in seconds. Upload your User Registry, Earnings, and Statement to identify every discrepancy.
           </p>
@@ -157,7 +134,7 @@ const App: React.FC = () => {
               onClick={runAudit}
               disabled={!isReady || loading}
               className={`
-                group relative px-12 py-5 rounded-2xl font-black uppercase text-sm tracking-widest transition-all shadow-xl
+                px-12 py-5 rounded-2xl font-black uppercase text-sm tracking-widest transition-all shadow-xl
                 ${isReady && !loading 
                   ? 'bg-slate-900 text-white hover:bg-black hover:-translate-y-1 active:scale-95 shadow-slate-200' 
                   : 'bg-slate-200 text-slate-400 cursor-not-allowed'}
@@ -170,23 +147,9 @@ const App: React.FC = () => {
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
                 )}
-                {loading ? 'Performing Deep Audit...' : 'Execute Final Audit'}
+                {loading ? 'Performing Audit...' : 'Execute Final Audit'}
               </div>
             </button>
-
-            {loading && (
-              <div className="flex flex-col items-center animate-in fade-in slide-in-from-bottom-2 duration-500">
-                <p className="text-blue-600 font-black text-xs uppercase tracking-widest animate-pulse mb-2">
-                   {LOADING_STEPS[loadingStep]}
-                </p>
-                <div className="w-64 h-1 bg-slate-200 rounded-full overflow-hidden">
-                   <div 
-                    className="h-full bg-blue-600 transition-all duration-[3500ms] ease-linear"
-                    style={{ width: `${((loadingStep + 1) / LOADING_STEPS.length) * 100}%` }}
-                   ></div>
-                </div>
-              </div>
-            )}
 
             {!isReady && !loading && (
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
@@ -205,14 +168,6 @@ const App: React.FC = () => {
                   <div>
                     <h3 className="font-bold text-red-900">Audit Interrupted</h3>
                     <p className="text-sm text-red-700 mt-1 font-medium">{error}</p>
-                    <a 
-                      href="https://ai.google.dev/gemini-api/docs/api-key" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="inline-block mt-3 text-xs font-black text-red-600 uppercase border-b-2 border-red-200 hover:border-red-600"
-                    >
-                      Verify API Access
-                    </a>
                   </div>
                 </div>
               </div>

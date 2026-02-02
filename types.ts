@@ -1,10 +1,4 @@
 
-export interface MatchedTransaction {
-  date: string;
-  reference: string;
-  amount: number;
-}
-
 export interface AccountBreakdown {
   accountNumber: string;
   amountSent: number;
@@ -18,7 +12,6 @@ export interface UserSummary {
   totalSent: number;
   balance: number;
   accountBreakdown: AccountBreakdown[];
-  matchedTransactions: MatchedTransaction[]; // New drill-down data
 }
 
 export interface UnknownAccount {

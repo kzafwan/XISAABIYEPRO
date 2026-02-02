@@ -24,7 +24,6 @@ export const performAudit = async (
 
     AUDIT RULES:
     - Correlate users from "Daily Earnings" with payments in the "Bank Statement".
-    - For EVERY payment matched, record the Date, Reference, and Amount.
     - Calculate Owed = Total of 'Debit' column for that user.
     - Calculate Sent = Total of identified payments found in Bank Statement.
     - Balance = Sent - Owed.
@@ -35,7 +34,7 @@ export const performAudit = async (
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview', // Using Pro for deeper cross-referencing logic
+      model: 'gemini-3-pro-preview',
       contents: [
         {
           parts: [
@@ -63,18 +62,6 @@ export const performAudit = async (
                   totalOwed: { type: Type.NUMBER },
                   totalSent: { type: Type.NUMBER },
                   balance: { type: Type.NUMBER },
-                  matchedTransactions: {
-                    type: Type.ARRAY,
-                    items: {
-                      type: Type.OBJECT,
-                      properties: {
-                        date: { type: Type.STRING },
-                        reference: { type: Type.STRING },
-                        amount: { type: Type.NUMBER }
-                      },
-                      required: ["date", "reference", "amount"]
-                    }
-                  },
                   accountBreakdown: {
                     type: Type.ARRAY,
                     items: {
@@ -87,7 +74,7 @@ export const performAudit = async (
                     }
                   }
                 },
-                required: ["userId", "userName", "totalOwed", "totalSent", "balance", "accountBreakdown", "matchedTransactions"]
+                required: ["userId", "userName", "totalOwed", "totalSent", "balance", "accountBreakdown"]
               }
             },
             missingPayments: {
