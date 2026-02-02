@@ -1,13 +1,109 @@
-import React from 'react';
-import { AuditResults } from '../types';
+import React, { useState } from 'react';
+import { AuditResults, UserSummary } from '../types';
 
 interface ResultsViewProps {
   results: AuditResults;
   onDownload: () => void;
 }
 
+const UserRow: React.FC<{ user: UserSummary }> = ({ user }) => {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <>
+      <tr 
+        onClick={() => setExpanded(!expanded)}
+        className={`cursor-pointer transition-all border-b border-slate-100 ${expanded ? 'bg-blue-50/50' : 'hover:bg-slate-50'}`}
+      >
+        <td className="px-6 py-4">
+          <div className="flex items-center gap-3">
+            <svg className={`w-4 h-4 text-slate-400 transition-transform ${expanded ? 'rotate-90 text-blue-600' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+            </svg>
+            <div>
+              <div className="text-sm font-black text-slate-900 group-hover:text-blue-700">{user.userName}</div>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-[10px] text-slate-400 font-mono font-bold uppercase px-1.5 py-0.5 bg-slate-100 rounded">{user.userId}</span>
+                {user.phoneNumber && (
+                  <span className="text-[10px] text-blue-500 font-bold">{user.phoneNumber}</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </td>
+        <td className="px-6 py-4 text-sm text-right text-slate-600 font-medium">${user.totalOwed.toFixed(2)}</td>
+        <td className="px-6 py-4 text-sm text-right text-slate-900 font-black">${user.totalSent.toFixed(2)}</td>
+        <td className="px-6 py-4 text-sm text-right">
+          <span className={`inline-block min-w-[80px] px-3 py-1.5 rounded-lg font-black text-xs text-center border shadow-sm transition-all ${user.balance < 0 ? 'bg-red-50 text-red-600 border-red-100' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
+            {user.balance < 0 ? '-' : '+'}${Math.abs(user.balance).toFixed(2)}
+          </span>
+        </td>
+        <td className="px-6 py-4">
+            <div className="flex flex-wrap gap-1">
+                {user.accountBreakdown.slice(0, 2).map((acc, i) => (
+                    <span key={i} className="text-[9px] bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-500 font-mono">
+                        {acc.accountNumber.slice(-4)}
+                    </span>
+                ))}
+                {user.accountBreakdown.length > 2 && <span className="text-[9px] text-slate-400 font-bold">+{user.accountBreakdown.length - 2} more</span>}
+            </div>
+        </td>
+      </tr>
+      {expanded && (
+        <tr className="bg-slate-50/80 animate-in slide-in-from-top-2 duration-200">
+          <td colSpan={5} className="px-12 py-6 border-b border-slate-200 shadow-inner">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                  Verified Credit Matches (Bank Statement)
+                </h4>
+                <div className="space-y-2">
+                  {user.matchedTransactions && user.matchedTransactions.length > 0 ? (
+                    user.matchedTransactions.map((tx, i) => (
+                      <div key={i} className="flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                        <div>
+                          <p className="text-xs font-black text-slate-800">{tx.reference}</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase">{tx.date}</p>
+                        </div>
+                        <p className="text-sm font-black text-blue-600">+${tx.amount.toFixed(2)}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-xs text-slate-400 italic py-4 text-center bg-white rounded-lg border border-dashed border-slate-200">
+                      No direct transaction matches found for this user.
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div>
+                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                  Account Linking Analysis
+                </h4>
+                <div className="space-y-2">
+                  {user.accountBreakdown.map((acc, i) => (
+                    <div key={i} className="flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                      <div className="flex items-center gap-2">
+                         <div className="p-1.5 bg-indigo-50 rounded text-indigo-600">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                         </div>
+                         <p className="text-xs font-mono font-bold text-slate-600">{acc.accountNumber}</p>
+                      </div>
+                      <p className="text-xs font-black text-slate-900">${acc.amountSent.toFixed(2)}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
+  );
+};
+
 const ResultsView: React.FC<ResultsViewProps> = ({ results, onDownload }) => {
-  // Grand Totals Calculation
   const grandTotalOwed = results.userSummaries.reduce((sum, u) => sum + u.totalOwed, 0);
   const grandTotalSent = results.userSummaries.reduce((sum, u) => sum + u.totalSent, 0);
   const netBalance = grandTotalSent - grandTotalOwed;
@@ -32,11 +128,11 @@ const ResultsView: React.FC<ResultsViewProps> = ({ results, onDownload }) => {
         </div>
       </div>
 
-      {/* Official Audit Memo Section */}
+      {/* Audit Header */}
       <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden">
         <div className="bg-slate-900 px-8 py-6 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-white/10 rounded-xl p-1 shadow-inner backdrop-blur-sm border border-white/5">
+             <div className="w-12 h-12 bg-white/10 rounded-xl p-1 shadow-inner backdrop-blur-sm border border-white/5">
               <svg viewBox="0 0 100 100" className="w-full h-full">
                 <defs>
                   <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -46,13 +142,11 @@ const ResultsView: React.FC<ResultsViewProps> = ({ results, onDownload }) => {
                 </defs>
                 <rect width="100" height="100" rx="20" fill="url(#headerGrad)" />
                 <path d="M38 42l10 10-10 10h6l7-7 7 7h6L55 52l10-10h-6l-7 7-7-7z" fill="white" />
-                <path d="M25 38v22l-5-5h10l-5 5" stroke="#ef4444" strokeWidth="12" strokeLinecap="round" fill="none" />
-                <path d="M75 62v-22l-5 5h10l-5-5" stroke="#22c55e" strokeWidth="12" strokeLinecap="round" fill="none" />
               </svg>
             </div>
             <div>
-              <h2 className="text-xl font-black text-white tracking-tight uppercase">XisaabiyePro <span className="text-blue-400">Analysis</span></h2>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em]">Official Audit Findings</p>
+              <h2 className="text-xl font-black text-white tracking-tight uppercase">Audit <span className="text-blue-400">Analysis</span></h2>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em]">Official Findings</p>
             </div>
           </div>
           <button 
@@ -65,30 +159,10 @@ const ResultsView: React.FC<ResultsViewProps> = ({ results, onDownload }) => {
             DOWNLOAD FULL REPORT
           </button>
         </div>
-        
-        <div className="relative p-8 bg-slate-50">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Executive Summary Memo</span>
-              <div className="h-px flex-grow bg-slate-200"></div>
-            </div>
-            
-            <div className="bg-white border border-slate-200 p-6 rounded-xl shadow-inner italic leading-relaxed text-slate-700 font-medium">
-              <span className="text-blue-600 font-black not-italic mr-2">AUDIT NOTE:</span>
-              {results.summaryNote}
-            </div>
-          </div>
+        <div className="p-8 bg-slate-50 italic text-slate-700 font-medium leading-relaxed border-b border-slate-200">
+           <span className="text-blue-600 font-black not-italic mr-2">AUDIT NOTE:</span> {results.summaryNote}
         </div>
-      </div>
 
-      {/* Main Reconciliation Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-          <h3 className="font-black text-slate-900 uppercase text-[11px] tracking-[0.2em]">Detailed User Reconciliation</h3>
-          <span className="text-[10px] font-bold text-slate-400 bg-white px-2 py-1 rounded border border-slate-100 shadow-xs">
-            {results.userSummaries.length} Users Processed
-          </span>
-        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
@@ -96,45 +170,13 @@ const ResultsView: React.FC<ResultsViewProps> = ({ results, onDownload }) => {
                 <th className="px-6 py-4 font-black">Identified User</th>
                 <th className="px-6 py-4 font-black text-right">Owed (Earnings)</th>
                 <th className="px-6 py-4 font-black text-right">Sent (Statement)</th>
-                <th className="px-6 py-4 font-black text-right">Closing Balance</th>
-                <th className="px-6 py-4 font-black">Associated Accounts</th>
+                <th className="px-6 py-4 font-black text-right">Balance</th>
+                <th className="px-6 py-4 font-black">Linked Accounts</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {results.userSummaries.map((user) => (
-                <tr key={user.userId} className="hover:bg-blue-50/30 transition-colors group">
-                  <td className="px-6 py-4">
-                    <div className="text-sm font-black text-slate-900 group-hover:text-blue-700 transition-colors">{user.userName}</div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[10px] text-slate-400 font-mono font-bold uppercase px-1.5 py-0.5 bg-slate-100 rounded">{user.userId}</span>
-                      {user.phoneNumber && (
-                        <span className="text-[10px] text-blue-600 font-black tracking-tighter bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">{user.phoneNumber}</span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-right text-slate-600 font-medium">${user.totalOwed.toFixed(2)}</td>
-                  <td className="px-6 py-4 text-sm text-right text-slate-900 font-black">${user.totalSent.toFixed(2)}</td>
-                  <td className="px-6 py-4 text-sm text-right">
-                    <span className={`inline-block min-w-[80px] px-3 py-1.5 rounded-lg font-black text-xs text-center border shadow-sm transition-all ${user.balance < 0 ? 'bg-red-50 text-red-600 border-red-100' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
-                      ${user.balance.toFixed(2)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-wrap gap-1.5 max-w-xs">
-                      {user.accountBreakdown.length > 0 ? (
-                        user.accountBreakdown.map((acc, i) => (
-                          <div key={i} className="flex items-center gap-1 text-[9px] bg-white border border-slate-200 px-2 py-1 rounded-md shadow-sm">
-                            <span className="font-mono text-slate-400">{acc.accountNumber}</span>
-                            <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                            <span className="font-black text-slate-700">${acc.amountSent.toFixed(0)}</span>
-                          </div>
-                        ))
-                      ) : (
-                        <span className="text-slate-300 text-[9px] uppercase font-bold tracking-widest">No Records Found</span>
-                      )}
-                    </div>
-                  </td>
-                </tr>
+                <UserRow key={user.userId} user={user} />
               ))}
             </tbody>
           </table>
@@ -142,57 +184,46 @@ const ResultsView: React.FC<ResultsViewProps> = ({ results, onDownload }) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Defaulters Section */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="px-6 py-5 border-b border-red-100 bg-red-50/50 flex justify-between items-center">
-            <h3 className="font-black text-red-800 flex items-center gap-2 text-xs uppercase tracking-widest">
-              Critical: Payment Defaulters
-            </h3>
+          <div className="px-6 py-5 border-b border-red-100 bg-red-50/50">
+            <h3 className="font-black text-red-800 text-xs uppercase tracking-widest">Defaulters List</h3>
           </div>
           <div className="p-6">
             {results.missingPayments.length > 0 ? (
-              <ul className="grid grid-cols-1 gap-2">
+              <ul className="space-y-2">
                 {results.missingPayments.map((entry, idx) => (
-                  <li key={idx} className="text-sm font-bold text-slate-700 p-3 bg-white rounded-lg border border-slate-100 shadow-sm flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-red-500 shadow-sm shadow-red-200"></div>
+                  <li key={idx} className="text-sm font-bold text-slate-700 p-3 bg-red-50/30 rounded-lg border border-red-100 flex items-center gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
                     {entry}
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-slate-400 italic py-4 flex items-center gap-2">
-                <svg className="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                Full compliance. All users have made payments.
-              </p>
+              <p className="text-sm text-slate-400 italic text-center py-4">Full compliance. No defaulters found.</p>
             )}
           </div>
         </div>
 
-        {/* Unmatched Transactions */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="px-6 py-5 border-b border-amber-100 bg-amber-50/50 flex justify-between items-center">
-            <h3 className="font-black text-amber-800 flex items-center gap-2 text-xs uppercase tracking-widest">
-              Review: Unmatched Funds
-            </h3>
+          <div className="px-6 py-5 border-b border-amber-100 bg-amber-50/50">
+            <h3 className="font-black text-amber-800 text-xs uppercase tracking-widest">Unmatched Credits</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead className="bg-slate-50/30">
                 <tr className="text-[9px] uppercase text-slate-400 tracking-widest">
-                  <th className="px-6 py-3">Account Reference</th>
+                  <th className="px-6 py-3">Reference</th>
                   <th className="px-6 py-3 text-right">Amount</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {results.unknownAccounts.map((acc, idx) => (
-                  <tr key={idx} className="text-xs group hover:bg-amber-50/20 transition-colors">
+                  <tr key={idx} className="text-xs group hover:bg-amber-50/20">
                     <td className="px-6 py-4">
-                      <div className="font-mono text-slate-900 font-black">{acc.accountNumber}</div>
-                      <div className="text-[10px] text-slate-400 truncate max-w-[150px] font-medium">{acc.transactionRef}</div>
+                      <div className="font-mono text-slate-900 font-bold">{acc.accountNumber}</div>
+                      <div className="text-[10px] text-slate-400">{acc.transactionRef}</div>
                     </td>
-                    <td className="px-6 py-4 text-right font-black text-amber-600 tracking-tighter uppercase font-mono">${acc.amount.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-right font-black text-amber-600">${acc.amount.toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>

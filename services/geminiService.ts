@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { AuditResults } from "../types";
 
@@ -6,37 +7,35 @@ export const performAudit = async (
   earningsBase64: string,
   statementBase64: string
 ): Promise<AuditResults> => {
-  // Use the API key from environment variables
   const apiKey = process.env.API_KEY;
   
   if (!apiKey || apiKey === 'undefined' || apiKey === '') {
-    throw new Error(
-      "API Key Missing: Please go to Vercel Settings -> Environment Variables, add API_KEY, and then REDEPLOY your app."
-    );
+    throw new Error("API Key Missing: Please configure API_KEY in your environment.");
   }
 
-  // Initialize the AI with the detected key
   const ai = new GoogleGenAI({ apiKey });
 
   const prompt = `
     You are XisaabiyePro, an elite Forensic Financial Auditor. 
     Audit these three documents with absolute precision:
-    1. User Registry (Master list of users)
+    1. User Registry (Master list of users and associated account numbers/IDs)
     2. Daily Earnings (Use 'Debit' column for amount each user owes)
     3. Bank Statement (Check for incoming credits matching user IDs or accounts)
 
     AUDIT RULES:
-    - Match users from "Daily Earnings" to the "Bank Statement".
+    - Correlate users from "Daily Earnings" with payments in the "Bank Statement".
+    - For EVERY payment matched, record the Date, Reference, and Amount.
     - Calculate Owed = Total of 'Debit' column for that user.
-    - Calculate Sent = Total found in Bank Statement.
+    - Calculate Sent = Total of identified payments found in Bank Statement.
     - Balance = Sent - Owed.
 
-    Be extremely accurate. Identify users who have not paid anything.
+    Be extremely accurate. If a user has NO matching payments, add them to missingPayments.
+    If a payment exists in the statement but cannot be linked to a registry user, add to unknownAccounts.
   `;
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview', // Flash is faster and more reliable on Free Tier
+      model: 'gemini-3-pro-preview', // Using Pro for deeper cross-referencing logic
       contents: [
         {
           parts: [
@@ -48,6 +47,7 @@ export const performAudit = async (
         }
       ],
       config: {
+        thinkingConfig: { thinkingBudget: 15000 },
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -63,6 +63,18 @@ export const performAudit = async (
                   totalOwed: { type: Type.NUMBER },
                   totalSent: { type: Type.NUMBER },
                   balance: { type: Type.NUMBER },
+                  matchedTransactions: {
+                    type: Type.ARRAY,
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                        date: { type: Type.STRING },
+                        reference: { type: Type.STRING },
+                        amount: { type: Type.NUMBER }
+                      },
+                      required: ["date", "reference", "amount"]
+                    }
+                  },
                   accountBreakdown: {
                     type: Type.ARRAY,
                     items: {
@@ -75,7 +87,7 @@ export const performAudit = async (
                     }
                   }
                 },
-                required: ["userId", "userName", "totalOwed", "totalSent", "balance", "accountBreakdown"]
+                required: ["userId", "userName", "totalOwed", "totalSent", "balance", "accountBreakdown", "matchedTransactions"]
               }
             },
             missingPayments: {
@@ -102,15 +114,8 @@ export const performAudit = async (
       }
     });
 
-    const text = response.text;
-    if (!text) throw new Error("The AI returned an empty response. Please try again.");
-    
-    return JSON.parse(text) as AuditResults;
+    return JSON.parse(response.text || "{}") as AuditResults;
   } catch (error: any) {
-    console.error("Gemini API Error:", error);
-    if (error.message?.includes("API key not valid")) {
-      throw new Error("Invalid API Key. Please check your key in Google AI Studio and update Vercel.");
-    }
-    throw new Error(`Audit Failed: ${error.message || "Unknown error during document analysis."}`);
+    throw new Error(`Audit Failed: ${error.message}`);
   }
 };

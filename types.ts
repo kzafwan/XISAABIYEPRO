@@ -1,4 +1,10 @@
 
+export interface MatchedTransaction {
+  date: string;
+  reference: string;
+  amount: number;
+}
+
 export interface AccountBreakdown {
   accountNumber: string;
   amountSent: number;
@@ -7,11 +13,12 @@ export interface AccountBreakdown {
 export interface UserSummary {
   userId: string;
   userName: string;
-  phoneNumber?: string; // New field
+  phoneNumber?: string;
   totalOwed: number;
   totalSent: number;
   balance: number;
   accountBreakdown: AccountBreakdown[];
+  matchedTransactions: MatchedTransaction[]; // New drill-down data
 }
 
 export interface UnknownAccount {
@@ -23,7 +30,7 @@ export interface UnknownAccount {
 
 export interface AuditResults {
   userSummaries: UserSummary[];
-  missingPayments: string[]; // This will store strings like "[Phone] Name"
+  missingPayments: string[];
   unknownAccounts: UnknownAccount[];
   summaryNote: string;
 }
