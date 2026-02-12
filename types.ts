@@ -1,4 +1,12 @@
 
+export interface MatchedTransaction {
+  date: string;
+  time: string;
+  reference: string;
+  amount: number;
+  isLate: boolean; // True if payment is after 8:00 PM
+}
+
 export interface AccountBreakdown {
   accountNumber: string;
   amountSent: number;
@@ -12,11 +20,13 @@ export interface UserSummary {
   totalSent: number;
   balance: number;
   accountBreakdown: AccountBreakdown[];
+  matchedTransactions: MatchedTransaction[];
 }
 
 export interface UnknownAccount {
   accountNumber: string;
   date: string;
+  time: string;
   amount: number;
   transactionRef: string;
 }
